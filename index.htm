@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فرم پرداخت و اطلاعات کاربری</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        input[type="email"]:focus {
+            border-color: #5c6bc0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #5c6bc0;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3f4b9b;
+        }
+
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>فرم پرداخت و اطلاعات کاربری</h2>
+    <form id="infoForm">
+        <label for="name">نام و نام خانوادگی:</label>
+        <input type="text" id="name" name="name" placeholder="نام و نام خانوادگی" required>
+
+        <label for="email">ایمیل:</label>
+        <input type="email" id="email" name="email" placeholder="ایمیل" required>
+
+        <label for="phone">شماره تلفن:</label>
+        <input type="tel" id="phone" name="phone" placeholder="شماره تلفن" required pattern="[0-9]{3}[0-9]{3}[0-9]{4}">
+
+        <label for="address">آدرس:</label>
+        <input type="text" id="address" name="address" placeholder="آدرس" required>
+
+        <button type="submit">پرداخت و ارسال اطلاعات</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('infoForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const address = document.getElementById('address').value;
+
+        // اطلاعات پرداخت
+        const paymentData = {
+            name: name,
+            email: email,
+            phone: phone,
+            address: address,
+            amount: 10000, // مبلغ به ریال (مثال: ۱۰۰۰ تومان)
+            desc: 'پرداخت برای خدمات', // توضیحات پرداخت
+            callback: 'https://yourwebsite.com/callback', // آدرس بازگشت پس از پرداخت
+        };
+
+        // ارسال درخواست به درگاه پرداخت IDPay
+        fetch('https://api.idpay.ir/v1.1/payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': 'your-api-key', // جایگزین با API Key خود از IDPay
+                'X-SANDBOX': '1', // حالت تست (برای محیط تست از 1 استفاده کنید)
+            },
+            body: JSON.stringify(paymentData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                // هدایت کاربر به صفحه پرداخت
+                window.location.href = data.link;
+            } else {
+                alert('خطا در اتصال به درگاه پرداخت!');
+            }
+        })
+        .catch(error => {
+            alert('خطا در ارسال درخواست!');
+        });
+    });
+
+    // تابع برای ارسال اطلاعات به دیسکورد پس از پرداخت موفق
+    function sendToDiscord(name, email, phone, address) {
+        const webhookUrl = 'https://discord.com/api/webhooks/1228828558412091607/1j6i2p3uno7_PJXl2NTYzMw3KvU39KMkP0r2eP17qDlaDZV3hY5UsV7DD1y2pOoeFkGs'; // جایگزین با آدرس Webhook دیسکورد شما
+
+        const message = {
+            content: `اطلاعات کاربر جدید:\n\n**نام:** ${name}\n**ایمیل:** ${email}\n**شماره تلفن:** ${phone}\n**آدرس:** ${address}`
+        };
+
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(message)
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('اطلاعات با موفقیت به دیسکورد ارسال شد!');
+            } else {
+                console.log('خطا در ارسال اطلاعات به دیسکورد!');
+            }
+        })
+        .catch(error => {
+            console.log('خطا در ارسال درخواست به دیسکورد!');
+        });
+    }
+
+    // بررسی وضعیت پرداخت پس از بازگشت به سایت
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const trackId = urlParams.get('track_id');
+
+    if (status && trackId) {
+        if (status === '10') { // وضعیت موفقیت‌آمیز
+            const name = localStorage.getItem('name');
+            const email = localStorage.getItem('email');
+            const phone = localStorage.getItem('phone');
+            const address = localStorage.getItem('address');
+
+            sendToDiscord(name, email, phone, address);
+            alert('پرداخت با موفقیت انجام شد و اطلاعات ارسال شد!');
+        } else {
+            alert('پرداخت ناموفق بود!');
+        }
+    }
+</script>
+</body>
+</html>
